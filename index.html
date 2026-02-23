@@ -19,201 +19,124 @@
             --vice-purple: #2a0a3a;
         }
 
-        /* --- VÍDEO DE FUNDO CORRIGIDO (PROPORÇÃO PERFEITA) --- */
+        /* --- VÍDEO DE FUNDO --- */
         #bg-video {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            object-fit: cover; /* Mágica acontece aqui: não estica, apenas preenche proporcionalmente */
-            z-index: -2;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            object-fit: cover; z-index: -2;
         }
-
-        /* Película escura por cima do vídeo para dar contraste */
         #video-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 5, 20, 0.75); /* Escurece o vídeo um pouco */
-            z-index: -1;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 5, 20, 0.75); z-index: -1;
         }
 
-        /* Reset do body */
         body {
-            color: white;
-            font-family: 'Roboto', sans-serif;
-            text-align: center;
-            margin: 0;
-            padding: 20px 10px;
-            min-height: 100vh;
-            box-sizing: border-box;
-            overflow-x: hidden;
+            color: white; font-family: 'Roboto', sans-serif; text-align: center;
+            margin: 0; padding: 20px 10px; min-height: 100vh;
+            box-sizing: border-box; overflow-x: hidden;
         }
 
-        /* Todo o conteúdo do site fica dentro dessa div para ficar por cima do vídeo */
-        #content-wrapper {
-            position: relative;
-            z-index: 1;
-        }
+        #content-wrapper { position: relative; z-index: 1; }
 
         h1 { 
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 900;
-            font-size: 2.5rem;
-            text-transform: uppercase;
-            margin-bottom: 5px;
+            font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 2.5rem;
+            text-transform: uppercase; margin-bottom: 5px;
             background: linear-gradient(to right, var(--neon-pink), var(--neon-cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0px 0px 15px rgba(255, 0, 255, 0.4);
-            letter-spacing: 2px;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0px 0px 15px rgba(255, 0, 255, 0.4); letter-spacing: 2px;
         }
+        p.subtitle { color: #ddd; margin-bottom: 20px; font-size: 1.1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
 
-        p.subtitle { 
-            color: #ddd; 
-            margin-bottom: 20px; 
-            font-size: 1.1rem; 
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        /* --- WRAPPER DO MURAL --- */
+        #viewport-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 950px;
+            margin: 0 auto;
         }
 
         /* --- MURAL --- */
         #viewport {
-            width: 100%;
-            max-width: 950px;
-            height: 500px;
-            margin: 0 auto;
-            border: 4px solid rgba(0, 255, 255, 0.6);
-            border-radius: 8px;
-            overflow: auto; 
-            background-color: rgba(0, 0, 0, 0.85); 
-            position: relative;
+            width: 100%; height: 500px;
+            border: 4px solid rgba(0, 255, 255, 0.6); border-radius: 8px;
+            overflow: auto; background-color: rgba(0, 0, 0, 0.85); 
             box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
-            scrollbar-width: thin;
-            scrollbar-color: var(--neon-pink) #111;
+            scrollbar-width: thin; scrollbar-color: var(--neon-pink) #111;
         }
             #viewport::-webkit-scrollbar { width: 10px; height: 10px; }
             #viewport::-webkit-scrollbar-track { background: #111; }
             #viewport::-webkit-scrollbar-thumb { background-color: var(--neon-pink); border-radius: 5px; }
 
         #mural {
-            background-color: transparent; 
-            cursor: crosshair;
-            width: 3200px; 
-            height: 1800px;
-            display: block;
-            background-image: 
-                linear-gradient(rgba(255, 0, 255, 0.08) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 255, 0.08) 1px, transparent 1px);
-            background-size: 20px 20px;
+            background-color: transparent; cursor: crosshair;
+            width: 3200px; height: 1800px; display: block;
+            /* Suaviza o zoom */
+            transition: width 0.2s ease-out, height 0.2s ease-out;
         }
+
+        /* --- BOTÕES DE ZOOM --- */
+        .zoom-controls {
+            position: absolute; bottom: 20px; right: 20px; display: flex;
+            flex-direction: column; gap: 10px; z-index: 10;
+        }
+        .zoom-controls button {
+            background: rgba(10, 5, 20, 0.9); color: var(--neon-cyan);
+            border: 2px solid var(--neon-pink); border-radius: 8px;
+            width: 45px; height: 45px; font-size: 24px; font-weight: bold;
+            font-family: 'Montserrat', sans-serif; cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.3); transition: 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .zoom-controls button:hover {
+            background: var(--neon-pink); color: white;
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.8); transform: scale(1.1);
+        }
+        #zoom-reset { font-size: 14px; }
 
         /* --- CHAT ANÔNIMO --- */
         #chat-container {
-            max-width: 950px;
-            margin: 25px auto;
-            background: rgba(10, 5, 20, 0.8);
-            border: 2px solid var(--neon-pink);
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 0 20px rgba(255, 0, 255, 0.2);
-            backdrop-filter: blur(5px);
+            max-width: 950px; margin: 25px auto; background: rgba(10, 5, 20, 0.8);
+            border: 2px solid var(--neon-pink); border-radius: 8px; padding: 15px;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.2); backdrop-filter: blur(5px);
         }
-
         #chat-container h3 {
-            margin: 0 0 10px 0;
-            color: var(--neon-pink);
-            text-transform: uppercase;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 1.2rem;
-            text-shadow: 0 0 5px rgba(255, 0, 255, 0.5);
+            margin: 0 0 10px 0; color: var(--neon-pink); text-transform: uppercase;
+            font-family: 'Montserrat', sans-serif; font-size: 1.2rem; text-shadow: 0 0 5px rgba(255, 0, 255, 0.5);
         }
-
         #chat-messages {
-            height: 250px;
-            overflow-y: auto;
-            text-align: left;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 4px;
-            margin-bottom: 15px;
-            scrollbar-width: thin;
-            scrollbar-color: var(--neon-cyan) #111;
+            height: 250px; overflow-y: auto; text-align: left; padding: 10px;
+            background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 4px; margin-bottom: 15px; scrollbar-width: thin; scrollbar-color: var(--neon-cyan) #111;
         }
-
-        .chat-message {
-            margin-bottom: 10px;
-            font-size: 14px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            padding-bottom: 8px;
-            word-wrap: break-word;
-            animation: fadeIn 0.3s ease-in;
-        }
+        .chat-message { margin-bottom: 10px; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; word-wrap: break-word; animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        .chat-message .anon {
-            color: var(--neon-cyan);
-            font-weight: bold;
-            margin-right: 5px;
-        }
-
-        .chat-input-area {
-            display: flex;
-            gap: 10px;
-        }
-
+        .chat-message .anon { color: var(--neon-cyan); font-weight: bold; margin-right: 5px; }
+        .chat-input-area { display: flex; gap: 10px; }
         #chat-input {
-            flex: 1;
-            padding: 12px;
-            background: rgba(0,0,0,0.7);
-            border: 1px solid var(--neon-cyan);
-            color: white;
-            border-radius: 4px;
-            outline: none;
-            font-size: 14px;
-            transition: 0.3s;
+            flex: 1; padding: 12px; background: rgba(0,0,0,0.7); border: 1px solid var(--neon-cyan);
+            color: white; border-radius: 4px; outline: none; font-size: 14px; transition: 0.3s;
         }
-
-        #chat-input:focus {
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
-        }
-
+        #chat-input:focus { box-shadow: 0 0 10px rgba(0, 255, 255, 0.4); }
         #send-btn {
-            padding: 0 25px;
-            background: var(--neon-pink);
-            color: white;
-            border: none;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-            text-transform: uppercase;
-            font-family: 'Montserrat', sans-serif;
-            transition: 0.2s;
+            padding: 0 25px; background: var(--neon-pink); color: white; border: none;
+            font-weight: bold; border-radius: 4px; cursor: pointer; text-transform: uppercase;
+            font-family: 'Montserrat', sans-serif; transition: 0.2s;
         }
+        #send-btn:hover { background: #d400d4; box-shadow: 0 0 15px rgba(255, 0, 255, 0.6); transform: scale(1.02); }
 
-        #send-btn:hover {
-            background: #d400d4;
-            box-shadow: 0 0 15px rgba(255, 0, 255, 0.6);
-            transform: scale(1.02);
-        }
-
-        /* Tooltip do Mural */
         #tooltip {
-            position: fixed;
-            background: rgba(0, 0, 0, 0.9);
-            color: var(--neon-cyan);
-            padding: 8px 15px;
-            border: 1px solid var(--neon-pink);
-            border-radius: 4px;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: bold;
-            pointer-events: none; 
-            display: none; 
-            z-index: 1000;
+            position: fixed; background: rgba(0, 0, 0, 0.9); color: var(--neon-cyan);
+            padding: 8px 15px; border: 1px solid var(--neon-pink); border-radius: 4px;
+            font-family: 'Montserrat', sans-serif; font-weight: bold; pointer-events: none; 
+            display: none; z-index: 1000;
         }
+
+        /* --- RODAPÉ --- */
+        footer {
+            margin-top: 40px; padding: 20px; background: rgba(10, 5, 20, 0.8);
+            border-top: 1px solid var(--neon-pink); box-shadow: 0 -5px 15px rgba(255, 0, 255, 0.1);
+            backdrop-filter: blur(5px); font-size: 14px; color: var(--neon-cyan); letter-spacing: 1px;
+        }
+        footer .disclaimer { font-size: 11px; color: #888; margin-top: 8px; letter-spacing: 0; }
     </style>
 </head>
 <body>
@@ -221,7 +144,6 @@
     <video autoplay muted playsinline id="bg-video">
         <source src="Jason_Duval_Video_Clip.mp4" type="video/mp4">
     </video>
-    
     <div id="video-overlay"></div>
 
     <div id="content-wrapper">
@@ -230,8 +152,15 @@
         
         <div id="tooltip"></div>
 
-        <div id="viewport">
-            <canvas id="mural" width="3200" height="1800"></canvas>
+        <div id="viewport-wrapper">
+            <div id="viewport">
+                <canvas id="mural" width="3200" height="1800"></canvas>
+            </div>
+            <div class="zoom-controls">
+                <button id="zoom-in" title="Aproximar">+</button>
+                <button id="zoom-reset" title="Tamanho Real">1x</button>
+                <button id="zoom-out" title="Afastar">-</button>
+            </div>
         </div>
 
         <div id="chat-container">
@@ -242,6 +171,11 @@
                 <button id="send-btn">Enviar</button>
             </div>
         </div>
+
+        <footer>
+            <p>&copy; 2026 Mural do GTA 6. Todos os direitos reservados.</p>
+            <p class="disclaimer">Este é um projeto criado por fãs e não possui afiliação oficial com a Rockstar Games. "Grand Theft Auto" e "GTA 6" são marcas registradas da Take-Two Interactive.</p>
+        </footer>
     </div>
 
     <script>
@@ -261,10 +195,29 @@
         const database = firebase.database();
         // ==========================================
 
-        // --- LÓGICA DO MURAL ---
         const canvas = document.getElementById('mural');
         const ctx = canvas.getContext('2d');
         const tooltip = document.getElementById('tooltip');
+
+        let currentZoom = 1;
+        const zoomStep = 0.5; 
+        const maxZoom = 3.0; 
+        const minZoom = 0.5; 
+
+        function applyZoom() {
+            canvas.style.width = (3200 * currentZoom) + 'px';
+            canvas.style.height = (1800 * currentZoom) + 'px';
+        }
+
+        document.getElementById('zoom-in').addEventListener('click', () => {
+            if (currentZoom < maxZoom) { currentZoom += zoomStep; applyZoom(); }
+        });
+        document.getElementById('zoom-out').addEventListener('click', () => {
+            if (currentZoom > minZoom) { currentZoom -= zoomStep; applyZoom(); }
+        });
+        document.getElementById('zoom-reset').addEventListener('click', () => {
+            currentZoom = 1; applyZoom();
+        });
 
         const cols = 400; const rows = 250; 
         const pieceW = canvas.width / cols; 
@@ -274,9 +227,16 @@
         const img = new Image();
         img.src = 'gta6.jpg'; 
 
-        function drawInitialGrid() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = 'rgba(0, 255, 255, 0.05)'; 
+        // Desenha o mural escuro com a grade
+        function drawFullMuralWithGrid() {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // Película escura
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Grade sutil
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.1)'; 
             ctx.lineWidth = 0.5;
             ctx.beginPath();
             for(let x=0; x<=canvas.width; x+=pieceW) { ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); }
@@ -284,24 +244,29 @@
             ctx.stroke();
         }
 
-        function renderPiece(col, row) {
-            const sx = col * (img.width / cols), sy = row * (img.height / rows);
-            const sw = img.width / cols, sh = img.height / rows;
-            ctx.clearRect(col * pieceW, row * pieceH, pieceW, pieceH);
+        // Função corrigida: Apenas revela a imagem brilhante, SEM borda rosa
+        function revealPiece(col, row) {
+            const sx = col * (img.width / cols);
+            const sy = row * (img.height / rows);
+            const sw = img.width / cols;
+            const sh = img.height / rows;
+
+            // Recorta e cola o pedaço brilhante por cima do escuro
             ctx.drawImage(img, sx, sy, sw, sh, col * pieceW, row * pieceH, pieceW, pieceH);
-            ctx.strokeStyle = 'rgba(255, 0, 255, 0.3)';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(col * pieceW, row * pieceH, pieceW, pieceH);
+            
+            // REMOVIDO: As linhas que desenhavam o strokeRect (borda rosa)
         }
 
         img.onload = () => {
-            drawInitialGrid();
+            drawFullMuralWithGrid();
+            
             const muralRef = database.ref('mural-gta6');
             muralRef.on('child_added', (snapshot) => {
                 const pieceId = snapshot.key;
                 claimedPieces[pieceId] = snapshot.val().instagram;
                 const [colStr, rowStr] = pieceId.split('-');
-                renderPiece(parseInt(colStr), parseInt(rowStr));
+                
+                revealPiece(parseInt(colStr), parseInt(rowStr));
             });
         };
 
@@ -342,7 +307,7 @@
         });
         canvas.addEventListener('mouseleave', () => tooltip.style.display = 'none');
 
-        // --- LÓGICA DO CHAT ANÔNIMO ---
+        // --- CHAT ANÔNIMO ---
         const chatMessages = document.getElementById('chat-messages');
         const chatInput = document.getElementById('chat-input');
         const sendBtn = document.getElementById('send-btn');
@@ -352,11 +317,9 @@
             const data = snapshot.val();
             const msgDiv = document.createElement('div');
             msgDiv.classList.add('chat-message');
-            
             const safeText = document.createTextNode(data.text);
             msgDiv.innerHTML = `<span class="anon">Anônimo:</span> `;
             msgDiv.appendChild(safeText);
-            
             chatMessages.appendChild(msgDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         });
@@ -364,22 +327,12 @@
         function enviarMensagem() {
             const texto = chatInput.value.trim();
             if (texto !== "") {
-                chatRef.push({
-                    text: texto,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                });
+                chatRef.push({ text: texto, timestamp: firebase.database.ServerValue.TIMESTAMP });
                 chatInput.value = ""; 
             }
         }
-
         sendBtn.addEventListener('click', enviarMensagem);
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') enviarMensagem();
-        });
+        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') enviarMensagem(); });
     </script>
-    <footer>
-        <p>&copy; 2026 Mural do GTA 6. Todos os direitos reservados.</p>
-        <p class="disclaimer">Este é um projeto criado por fãs e não possui afiliação oficial com a Rockstar Games. "Grand Theft Auto" e "GTA 6" são marcas registradas da Take-Two Interactive.</p>
-    </footer>
 </body>
 </html>
