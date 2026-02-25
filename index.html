@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mural Vice City - O Legado GTA 6</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+    <style>
+        :root {
+            --neon-pink: #ff00ff;
+            --neon-cyan: #00ffff;
+            --vice-purple: #2a0a3a;
+            --gang-red: #ff3333;
+            --gang-blue: #3366ff;
+            --gang-yellow: #ffcc00;
+            --gang-green: #00ff66;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* --- VÍDEO DE FUNDO COM EFEITOS --- */
+        #bg-video {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            object-fit: cover; z-index: -2;
+        }
+
+        #video-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 5, 20, 0.75); z-index: -1;
+        }
+
+        /* --- SCANLINES (EFEITO DE TV ANTIGA) --- */
+        #scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none; z-index: 999;
+            animation: scanlineFlicker 0.15s infinite;
+        }
+
+        @keyframes scanlineFlicker {
+            0% { opacity: 0.03; }
+            50% { opacity: 0.05; }
+            100% { opacity: 0.03; }
+        }
+
+        /* --- PARTÍCULAS FLUTUANTES --- */
+        #particles-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0;
+        }
+
+        .particle {
+            position: absolute; width: 2px; height: 2px;
+            background: var(--neon-cyan); border-radius: 50%;
+            opacity: 0.6;
+        }
+
+        body {
+            color: white; font-family: 'Roboto', sans-serif; text-align: center;
+            margin: 0; padding: 20px 10px; min-height: 100vh;
+            box-sizing: border-box; overflow-x: hidden;
+            background: #0a0514;
+        }
+
+        #content-wrapper { position: relative; z-index: 1; }
+
+        h1 { 
+            font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 2.5rem;
+            text-transform: uppercase; margin-bottom: 5px;
+            background: linear-gradient(to right, var(--neon-pink), var(--neon-cyan));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0px 0px 15px rgba(255, 0, 255, 0.4); letter-spacing: 2px;
+            animation: neonGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes neonGlow {
+            0%, 100% {
+                filter: drop-shadow(0 0 10px rgba(255, 0, 255, 0.5)) drop-shadow(0 0 20px rgba(0, 255, 255, 0.3));
+            }
+            50% {
+                filter: drop-shadow(0 0 20px rgba(255, 0, 255, 0.8)) drop-shadow(0 0 30px rgba(0, 255, 255, 0.6));
+            }
+        }
+
+        p.subtitle { 
+            color: #ddd; margin-bottom: 20px; font-size: 1.1rem; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- HEADER COM LOGIN E PERFIL --- */
+        #header-top {
+            display: flex; justify-content: space-between; align-items: center;
+            max-width: 950px; margin: 0 auto 20px; padding: 15px;
+            background: rgba(10, 5, 20, 0.8); border: 2px solid var(--neon-cyan);
+            border-radius: 8px; box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+            animation: slideInDown 0.6s ease-out;
+        }
+
+        @keyframes slideInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #auth-buttons {
+            display: flex; gap: 10px;
+        }
+
+        .auth-btn {
+            padding: 10px 20px; background: var(--neon-pink); color: white;
+            border: 2px solid var(--neon-pink); border-radius: 4px; cursor: pointer; 
+            font-weight: bold; font-family: 'Montserrat', sans-serif; transition: 0.3s;
+            position: relative; overflow: hidden;
+        }
+
+        .auth-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: left 0.3s ease;
+        }
+
+        .auth-btn:hover::before {
+            left: 100%;
+        }
+
+        .auth-btn:hover {
+            background: #d400d4; box-shadow: 0 0 20px rgba(255, 0, 255, 0.8);
+            transform: translateY(-2px);
+        }
+
+        .auth-btn.logout {
+            background: var(--gang-red);
+            border-color: var(--gang-red);
+        }
+
+        .auth-btn.logout:hover {
+            background: #cc0000;
+            box-shadow: 0 0 20px rgba(255, 51, 51, 0.8);
+        }
+
+        #user-profile {
+            display: none; align-items: center; gap: 15px;
+            animation: slideInRight 0.6s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .user-info {
+            text-align: left;
+        }
+
+        .user-name {
+            color: var(--neon-cyan); font-weight: bold; font-size: 1.1rem;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .user-level {
+            color: var(--neon-pink); font-size: 0.9rem;
+            text-shadow: 0 0 5px rgba(255, 0, 255, 0.5);
+        }
+
+        .user-avatar {
+            width: 50px; height: 50px; border-radius: 50%;
+            border: 2px solid var(--neon-pink); background: var(--neon-cyan);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; color: black; font-size: 1.5rem;
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(255, 0, 255, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(255, 0, 255, 0.8); }
+        }
+
+        /* --- MODAL DE LOGIN --- */
+        #login-modal, #registro-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95); z-index: 2000; align-items: center; 
+            justify-content: center; animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: rgba(10, 5, 20, 0.95); border: 3px solid var(--neon-pink);
+            border-radius: 12px; padding: 40px; max-width: 400px; 
+            box-shadow: 0 0 50px rgba(255, 0, 255, 0.6);
+            animation: slideUp 0.4s ease-out;
+            position: relative;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-content h2 {
+            color: var(--neon-cyan); margin-bottom: 20px; font-family: 'Montserrat', sans-serif;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .modal-content input {
+            width: 100%; padding: 12px; margin-bottom: 15px; background: rgba(0, 0, 0, 0.7);
+            border: 2px solid var(--neon-cyan); color: white; border-radius: 4px; 
+            box-sizing: border-box; transition: 0.3s;
+        }
+
+        .modal-content input:focus {
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+            outline: none;
+        }
+
+        .modal-content input::placeholder {
+            color: #888;
+        }
+
+        .modal-content button {
+            width: 100%; padding: 12px; margin-bottom: 10px; background: var(--neon-pink);
+            color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;
+            font-family: 'Montserrat', sans-serif; transition: 0.3s;
+            position: relative; overflow: hidden;
+        }
+
+        .modal-content button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: left 0.3s ease;
+        }
+
+        .modal-content button:hover::before {
+            left: 100%;
+        }
+
+        .modal-content button:hover {
+            background: #d400d4; box-shadow: 0 0 20px rgba(255, 0, 255, 0.8);
+        }
+
+        .modal-content .close-btn {
+            position: absolute; top: 15px; right: 20px; background: var(--gang-red);
+            width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 24px;
+            display: flex; align-items: center; justify-content: center; color: white;
+            border: none; transition: 0.3s;
+        }
+
+        .modal-content .close-btn:hover {
+            background: #cc0000;
+            box-shadow: 0 0 20px rgba(255, 51, 51, 0.8);
+            transform: rotate(90deg);
+        }
+
+        /* --- SELETOR DE FACÇÃO --- */
+        #gang-selector {
+            max-width: 950px; margin: 0 auto 20px; padding: 15px;
+            background: rgba(10, 5, 20, 0.8); border: 2px solid var(--neon-cyan);
+            border-radius: 8px; display: none;
+            animation: slideInUp 0.6s ease-out;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .gang-options {
+            display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+        }
+
+        .gang-btn {
+            padding: 10px 20px; border: 2px solid; border-radius: 4px; cursor: pointer;
+            font-weight: bold; font-family: 'Montserrat', sans-serif; transition: 0.3s;
+            background: rgba(0, 0, 0, 0.5); color: white;
+            position: relative; overflow: hidden;
+        }
+
+        .gang-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: left 0.3s ease;
+        }
+
+        .gang-btn:hover::before {
+            left: 100%;
+        }
+
+        .gang-btn.vercetti {
+            border-color: var(--gang-red); color: var(--gang-red);
+        }
+
+        .gang-btn.vercetti:hover,
+        .gang-btn.vercetti.active {
+            background: var(--gang-red); color: white;
+            box-shadow: 0 0 20px rgba(255, 51, 51, 0.8);
+            transform: translateY(-3px);
+        }
+
+        .gang-btn.forelli {
+            border-color: var(--gang-blue); color: var(--gang-blue);
+        }
+
+        .gang-btn.forelli:hover,
+        .gang-btn.forelli.active {
+            background: var(--gang-blue); color: white;
+            box-shadow: 0 0 20px rgba(51, 102, 255, 0.8);
+            transform: translateY(-3px);
+        }
+
+        .gang-btn.diaz {
+            border-color: var(--gang-yellow); color: var(--gang-yellow);
+        }
+
+        .gang-btn.diaz:hover,
+        .gang-btn.diaz.active {
+            background: var(--gang-yellow); color: black;
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.8);
+            transform: translateY(-3px);
+        }
+
+        .gang-btn.mendez {
+            border-color: var(--gang-green); color: var(--gang-green);
+        }
+
+        .gang-btn.mendez:hover,
+        .gang-btn.mendez.active {
+            background: var(--gang-green); color: black;
+            box-shadow: 0 0 20px rgba(0, 255, 102, 0.8);
+            transform: translateY(-3px);
+        }
+
+        /* --- WRAPPER DO MURAL --- */
+        #viewport-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 950px;
+            margin: 0 auto;
+        }
+
+        /* --- MURAL --- */
+        #viewport {
+            width: 100%; height: 500px;
+            border: 4px solid rgba(0, 255, 255, 0.6); border-radius: 8px;
+            overflow: auto; background-color: rgba(0, 0, 0, 0.85); 
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+            scrollbar-width: thin; scrollbar-color: var(--neon-pink) #111;
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        #viewport::-webkit-scrollbar { width: 10px; height: 10px; }
+        #viewport::-webkit-scrollbar-track { background: #111; }
+        #viewport::-webkit-scrollbar-thumb { 
+            background-color: var(--neon-pink); 
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+        }
+
+        #mural {
+            background-color: transparent; cursor: crosshair;
+            width: 3200px; height: 1800px; display: block;
+            transition: width 0.2s ease-out, height 0.2s ease-out;
+        }
+
+        /* --- BOTÕES DE ZOOM --- */
+        .zoom-controls {
+            position: absolute; bottom: 20px; right: 20px; display: flex;
+            flex-direction: column; gap: 10px; z-index: 10;
+        }
+
+        .zoom-controls button {
+            background: rgba(10, 5, 20, 0.9); color: var(--neon-cyan);
+            border: 2px solid var(--neon-pink); border-radius: 8px;
+            width: 45px; height: 45px; font-size: 24px; font-weight: bold;
+            font-family: 'Montserrat', sans-serif; cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.3); transition: 0.2s;
+            display: flex; align-items: center; justify-content: center;
+            position: relative; overflow: hidden;
+        }
+
+        .zoom-controls button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: left 0.3s ease;
+        }
+
+        .zoom-controls button:hover::before {
+            left: 100%;
+        }
+
+        .zoom-controls button:hover {
+            background: var(--neon-pink); color: white;
+            box-shadow: 0 0 25px rgba(255, 0, 255, 0.8); 
+            transform: scale(1.15);
+        }
+
+        #zoom-reset { font-size: 14px; }
+
+        /* --- CHAT GAMIFICADO --- */
+        #chat-container {
+            max-width: 950px; margin: 25px auto; background: rgba(10, 5, 20, 0.8);
+            border: 2px solid var(--neon-pink); border-radius: 8px; padding: 15px;
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.3); backdrop-filter: blur(5px);
+            animation: slideInUp 1s ease-out;
+        }
+
+        #chat-container h3 {
+            margin: 0 0 10px 0; color: var(--neon-pink); text-transform: uppercase;
+            font-family: 'Montserrat', sans-serif; font-size: 1.2rem; 
+            text-shadow: 0 0 10px rgba(255, 0, 255, 0.6);
+            animation: neonGlow 2s ease-in-out infinite;
+        }
+
+        #chat-messages {
+            height: 250px; overflow-y: auto; text-align: left; padding: 10px;
+            background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 4px; margin-bottom: 15px; scrollbar-width: thin; 
+            scrollbar-color: var(--neon-cyan) #111;
+        }
+
+        .chat-message {
+            margin-bottom: 10px; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 8px; word-wrap: break-word; animation: fadeIn 0.3s ease-in;
+            display: flex; align-items: flex-start; gap: 8px;
+            transition: 0.3s;
+        }
+
+        .chat-message:hover {
+            background: rgba(255, 0, 255, 0.05);
+            padding-left: 5px;
+            border-left: 2px solid var(--neon-pink);
+        }
+
+        .chat-avatar {
+            width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+            border: 2px solid var(--neon-cyan); display: flex; align-items: center;
+            justify-content: center; font-weight: bold; font-size: 0.8rem;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+        }
+
+        .chat-content {
+            flex: 1; text-align: left;
+        }
+
+        .chat-header {
+            display: flex; gap: 8px; align-items: center; margin-bottom: 3px;
+        }
+
+        .chat-username {
+            color: var(--neon-cyan); font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+
+        .chat-badge {
+            background: var(--neon-pink); color: white; padding: 2px 6px;
+            border-radius: 3px; font-size: 0.7rem; font-weight: bold;
+            box-shadow: 0 0 5px rgba(255, 0, 255, 0.5);
+        }
+
+        .chat-badge.level1 { background: #666; box-shadow: 0 0 5px rgba(102, 102, 102, 0.5); }
+        .chat-badge.level2 { background: var(--gang-blue); box-shadow: 0 0 5px rgba(51, 102, 255, 0.5); }
+        .chat-badge.level3 { background: var(--neon-pink); box-shadow: 0 0 5px rgba(255, 0, 255, 0.5); }
+        .chat-badge.level4 { background: var(--gang-yellow); box-shadow: 0 0 5px rgba(255, 204, 0, 0.5); }
+        .chat-badge.level5 { background: var(--gang-green); box-shadow: 0 0 5px rgba(0, 255, 102, 0.5); }
+
+        .chat-text {
+            color: #ddd;
+        }
+
+        .chat-input-area { display: flex; gap: 10px; }
+
+        #chat-input {
+            flex: 1; padding: 12px; background: rgba(0,0,0,0.7); border: 2px solid var(--neon-cyan);
+            color: white; border-radius: 4px; outline: none; font-size: 14px; transition: 0.3s;
+        }
+
+        #chat-input:focus { 
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+            border-color: var(--neon-pink);
+        }
+
+        #send-btn {
+            padding: 0 25px; background: var(--neon-pink); color: white; border: none;
+            font-weight: bold; border-radius: 4px; cursor: pointer; text-transform: uppercase;
+            font-family: 'Montserrat', sans-serif; transition: 0.2s;
+            position: relative; overflow: hidden;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+        }
+
+        #send-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: left 0.3s ease;
+        }
+
+        #send-btn:hover::before {
+            left: 100%;
+        }
+
+        #send-btn:hover { 
+            background: #d400d4; 
+            box-shadow: 0 0 25px rgba(255, 0, 255, 0.8); 
+            transform: scale(1.05);
+        }
+
+        #send-btn:active {
+            transform: scale(0.98);
+        }
+
+        #tooltip {
+            position: fixed; background: rgba(0, 0, 0, 0.95); color: var(--neon-cyan);
+            padding: 8px 15px; border: 2px solid var(--neon-pink); border-radius: 4px;
+            font-family: 'Montserrat', sans-serif; font-weight: bold; pointer-events: none; 
+            display: none; z-index: 1000;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.6);
+            animation: popIn 0.3s ease-out;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* --- RODAPÉ --- */
+        footer {
+            margin-top: 40px; padding: 20px; background: rgba(10, 5, 20, 0.8);
+            border-top: 2px solid var(--neon-pink); 
+            box-shadow: 0 -5px 20px rgba(255, 0, 255, 0.2);
+            backdrop-filter: blur(5px); font-size: 14px; color: var(--neon-cyan); 
+            letter-spacing: 1px;
+            animation: slideInUp 1.2s ease-out;
+        }
+
+        footer .disclaimer { font-size: 11px; color: #888; margin-top: 8px; letter-spacing: 0; }
+
+        /* --- INDICADOR DE ATIVIDADE --- */
+        .activity-pulse {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--gang-green);
+            border-radius: 50%;
+            margin-left: 5px;
+            animation: activityPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes activityPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* --- RESPONSIVO --- */
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8rem; }
+            #header-top { flex-direction: column; gap: 15px; }
+            #user-profile { width: 100%; }
+            .gang-options { flex-direction: column; }
+            .gang-btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <!-- PARTÍCULAS FLUTUANTES -->
+    <div id="particles-container"></div>
+
+    <!-- SCANLINES -->
+    <div id="scanlines"></div>
+
+    <video autoplay muted playsinline id="bg-video">
+        <source src="Jason_Duval_Video_Clip.mp4" type="video/mp4">
+    </video>
+    <div id="video-overlay"></div>
+
+    <div id="content-wrapper">
+        <!-- HEADER COM LOGIN E PERFIL -->
+        <div id="header-top">
+            <div>
+                <h1>Mural Vice City - O Legado GTA 6</h1>
+                <p class="subtitle">100.000 espaços. O hype do século. Imortalize seu @ na história.</p>
+            </div>
+            <div id="auth-buttons">
+                <button class="auth-btn" id="login-btn" onclick="mostrarLoginModal()">Login</button>
+                <button class="auth-btn" id="register-btn" onclick="mostrarRegistroModal()">Registrar</button>
+            </div>
+            <div id="user-profile">
+                <div class="user-info">
+                    <div class="user-name" id="user-name-display">Usuário</div>
+                    <div class="user-level" id="user-level-display">Nível 1</div>
+                </div>
+                <div class="user-avatar" id="user-avatar">👤</div>
+                <button class="auth-btn logout" id="logout-btn" onclick="fazerLogout()">Sair</button>
+            </div>
+        </div>
+
+        <!-- MODAL DE LOGIN -->
+        <div id="login-modal">
+            <div class="modal-content">
+                <button class="close-btn" onclick="fecharLoginModal()">✕</button>
+                <h2>Login</h2>
+                <input type="email" id="login-email" placeholder="Email">
+                <input type="password" id="login-password" placeholder="Senha">
+                <button onclick="fazerLogin()">Entrar</button>
+                <p style="color: #888; font-size: 0.9rem;">Não tem conta? <a href="#" onclick="mostrarRegistroModal(); return false;" style="color: var(--neon-pink); text-decoration: none;">Registre-se</a></p>
+            </div>
+        </div>
+
+        <!-- MODAL DE REGISTRO -->
+        <div id="registro-modal">
+            <div class="modal-content">
+                <button class="close-btn" onclick="fecharRegistroModal()">✕</button>
+                <h2>Registrar</h2>
+                <input type="text" id="registro-username" placeholder="Nome de usuário">
+                <input type="email" id="registro-email" placeholder="Email">
+                <input type="password" id="registro-password" placeholder="Senha">
+                <button onclick="fazerRegistro()">Criar Conta</button>
+                <p style="color: #888; font-size: 0.9rem;">Já tem conta? <a href="#" onclick="mostrarLoginModal(); return false;" style="color: var(--neon-pink); text-decoration: none;">Faça login</a></p>
+            </div>
+        </div>
+
+        <!-- SELETOR DE FACÇÃO -->
+        <div id="gang-selector">
+            <p style="margin-top: 0; color: var(--neon-cyan); text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);">Escolha sua Facção:</p>
+            <div class="gang-options">
+                <button class="gang-btn vercetti" data-gang="vercetti" onclick="selecionarFaccao('vercetti')">🔴 Vercetti Gang</button>
+                <button class="gang-btn forelli" data-gang="forelli" onclick="selecionarFaccao('forelli')">🔵 Forelli Family</button>
+                <button class="gang-btn diaz" data-gang="diaz" onclick="selecionarFaccao('diaz')">🟡 Diaz Cartel</button>
+                <button class="gang-btn mendez" data-gang="mendez" onclick="selecionarFaccao('mendez')">🟢 Mendez Cartel</button>
+            </div>
+        </div>
+
+        <div id="tooltip"></div>
+
+        <div id="viewport-wrapper">
+            <div id="viewport">
+                <canvas id="mural" width="3200" height="1800"></canvas>
+            </div>
+            <div class="zoom-controls">
+                <button id="zoom-in" title="Aproximar">+</button>
+                <button id="zoom-reset" title="Tamanho Real">1x</button>
+                <button id="zoom-out" title="Afastar">-</button>
+            </div>
+        </div>
+
+        <div id="chat-container">
+            <h3>💬 Rádio Vice City (Chat Gamificado) <span class="activity-pulse"></span></h3>
+            <div id="chat-messages"></div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Manda a visão aí..." maxlength="120">
+                <button id="send-btn">Enviar</button>
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2026 Mural do GTA 6. Todos os direitos reservados.</p>
+            <p class="disclaimer">Este é um projeto criado por fãs e não possui afiliação oficial com a Rockstar Games. "Grand Theft Auto" e "GTA 6" são marcas registradas da Take-Two Interactive.</p>
+        </footer>
+    </div>
+
+    <script>
+        // ==========================================
+        // SISTEMA DE PARTÍCULAS
+        // ==========================================
+        function criarParticulas() {
+            const container = document.getElementById('particles-container');
+            const particleCount = 50;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animation = `flutuar ${3 + Math.random() * 5}s linear infinite`;
+                container.appendChild(particle);
+            }
+
+            // Adicionar animação CSS dinamicamente
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes flutuar {
+                    0% { transform: translateY(0px) translateX(0px); opacity: 0.6; }
+                    50% { opacity: 0.3; }
+                    100% { transform: translateY(-100vh) translateX(${Math.random() * 100 - 50}px); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        criarParticulas();
+
+        // ==========================================
+        // SISTEMA DE SONS
+        // ==========================================
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let soundEnabled = true;
+
+        function tocarSom(frequency, duration, type = 'sine') {
+            if (!soundEnabled) return;
+
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.value = frequency;
+                oscillator.type = type;
+
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+            } catch (e) {
+                console.log('Som desabilitado ou não suportado');
+            }
+        }
+
+        // Som de clique suave
+        function somClique() {
+            tocarSom(800, 0.05);
+        }
+
+        // Som de sucesso
+        function somSucesso() {
+            tocarSom(1200, 0.1);
+            setTimeout(() => tocarSom(1600, 0.1), 50);
+        }
+
+        // Som de erro
+        function somErro() {
+            tocarSom(300, 0.2);
+        }
+
+        // Som de notificação
+        function somNotificacao() {
+            tocarSom(600, 0.08);
+            setTimeout(() => tocarSom(800, 0.08), 80);
+        }
+
+        // ==========================================
+        // CONFIGURAÇÃO DO FIREBASE
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyC418tMqVWAF5SQl0WBySW39majO6v_6QU",
+            authDomain: "muralgta6.firebaseapp.com",
+            databaseURL: "https://muralgta6-default-rtdb.firebaseio.com",
+            projectId: "muralgta6",
+            storageBucket: "muralgta6.firebasestorage.app",
+            messagingSenderId: "276115616968",
+            appId: "1:276115616968:web:2d712f911e8e337f92a1fd",
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+
+        // ==========================================
+        // VARIÁVEIS GLOBAIS
+        // ==========================================
+        let currentUser = null;
+        let userStats = { level: 1, experience: 0, gang: null, messages: 0 };
+        let selectedGang = null;
+
+        // ==========================================
+        // AUTENTICAÇÃO
+        // ==========================================
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('auth-buttons').style.display = 'none';
+                document.getElementById('user-profile').style.display = 'flex';
+                document.getElementById('gang-selector').style.display = 'block';
+                somSucesso();
+                
+                database.ref('users/' + user.uid).once('value', (snapshot) => {
+                    if (snapshot.exists()) {
+                        userStats = snapshot.val();
+                        atualizarPerfilUsuario();
+                    } else {
+                        database.ref('users/' + user.uid).set({
+                            username: user.displayName || user.email.split('@')[0],
+                            email: user.email,
+                            level: 1,
+                            experience: 0,
+                            gang: null,
+                            messages: 0,
+                            lotsOwned: 0,
+                            createdAt: firebase.database.ServerValue.TIMESTAMP
+                        });
+                    }
+                });
+            } else {
+                currentUser = null;
+                document.getElementById('auth-buttons').style.display = 'flex';
+                document.getElementById('user-profile').style.display = 'none';
+                document.getElementById('gang-selector').style.display = 'none';
+            }
+        });
+
+        function mostrarLoginModal() {
+            somClique();
+            document.getElementById('login-modal').style.display = 'flex';
+            document.getElementById('registro-modal').style.display = 'none';
+        }
+
+        function fecharLoginModal() {
+            somClique();
+            document.getElementById('login-modal').style.display = 'none';
+        }
+
+        function mostrarRegistroModal() {
+            somClique();
+            document.getElementById('registro-modal').style.display = 'flex';
+            document.getElementById('login-modal').style.display = 'none';
+        }
+
+        function fecharRegistroModal() {
+            somClique();
+            document.getElementById('registro-modal').style.display = 'none';
+        }
+
+        function fazerLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            if (!email || !password) {
+                alert('Preencha todos os campos');
+                somErro();
+                return;
+            }
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    fecharLoginModal();
+                    document.getElementById('login-email').value = '';
+                    document.getElementById('login-password').value = '';
+                    somSucesso();
+                })
+                .catch((error) => {
+                    alert('Erro ao fazer login: ' + error.message);
+                    somErro();
+                });
+        }
+
+        function fazerRegistro() {
+            const username = document.getElementById('registro-username').value;
+            const email = document.getElementById('registro-email').value;
+            const password = document.getElementById('registro-password').value;
+
+            if (!username || !email || !password) {
+                alert('Preencha todos os campos');
+                somErro();
+                return;
+            }
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    return userCredential.user.updateProfile({ displayName: username });
+                })
+                .then(() => {
+                    fecharRegistroModal();
+                    document.getElementById('registro-username').value = '';
+                    document.getElementById('registro-email').value = '';
+                    document.getElementById('registro-password').value = '';
+                    somSucesso();
+                })
+                .catch((error) => {
+                    alert('Erro ao registrar: ' + error.message);
+                    somErro();
+                });
+        }
+
+        function fazerLogout() {
+            somClique();
+            auth.signOut().then(() => {
+                currentUser = null;
+                selectedGang = null;
+                userStats = { level: 1, experience: 0, gang: null, messages: 0 };
+            });
+        }
+
+        function atualizarPerfilUsuario() {
+            document.getElementById('user-name-display').textContent = currentUser.displayName || 'Usuário';
+            document.getElementById('user-level-display').textContent = 'Nível ' + userStats.level;
+            
+            const avatar = document.getElementById('user-avatar');
+            const inicial = (currentUser.displayName || 'U')[0].toUpperCase();
+            avatar.textContent = inicial;
+        }
+
+        // ==========================================
+        // FACÇÕES
+        // ==========================================
+        function selecionarFaccao(gang) {
+            somClique();
+            selectedGang = gang;
+            document.querySelectorAll('.gang-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('[data-gang="' + gang + '"]').classList.add('active');
+            
+            if (currentUser) {
+                database.ref('users/' + currentUser.uid + '/gang').set(gang);
+                userStats.gang = gang;
+                somSucesso();
+            }
+        }
+
+        // ==========================================
+        // MURAL INTERATIVO
+        // ==========================================
+        const canvas = document.getElementById('mural');
+        const ctx = canvas.getContext('2d');
+        const tooltip = document.getElementById('tooltip');
+
+        let currentZoom = 1;
+        const zoomStep = 0.5; 
+        const maxZoom = 3.0; 
+        const minZoom = 0.5; 
+
+        function applyZoom() {
+            canvas.style.width = (3200 * currentZoom) + 'px';
+            canvas.style.height = (1800 * currentZoom) + 'px';
+        }
+
+        document.getElementById('zoom-in').addEventListener('click', () => {
+            if (currentZoom < maxZoom) { 
+                currentZoom += zoomStep; 
+                applyZoom();
+                somClique();
+            }
+        });
+        document.getElementById('zoom-out').addEventListener('click', () => {
+            if (currentZoom > minZoom) { 
+                currentZoom -= zoomStep; 
+                applyZoom();
+                somClique();
+            }
+        });
+        document.getElementById('zoom-reset').addEventListener('click', () => {
+            currentZoom = 1; 
+            applyZoom();
+            somClique();
+        });
+
+        const cols = 400; const rows = 250; 
+        const pieceW = canvas.width / cols; 
+        const pieceH = canvas.height / rows; 
+        const claimedPieces = {}; 
+
+        const img = new Image();
+        img.src = 'gta6.jpg'; 
+
+        function drawFullMuralWithGrid() {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.1)'; 
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            for(let x=0; x<=canvas.width; x+=pieceW) { ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); }
+            for(let y=0; y<=canvas.height; y+=pieceH) { ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); }
+            ctx.stroke();
+        }
+
+        function revealPiece(col, row) {
+            const sx = col * (img.width / cols);
+            const sy = row * (img.height / rows);
+            const sw = img.width / cols;
+            const sh = img.height / rows;
+
+            ctx.drawImage(img, sx, sy, sw, sh, col * pieceW, row * pieceH, pieceW, pieceH);
+            
+            const pieceData = claimedPieces[col + '-' + row];
+            if (pieceData && pieceData.gang) {
+                const gangColors = {
+                    vercetti: '#ff3333',
+                    forelli: '#3366ff',
+                    diaz: '#ffcc00',
+                    mendez: '#00ff66'
+                };
+                ctx.shadowColor = gangColors[pieceData.gang] || '#ff00ff';
+                ctx.shadowBlur = 5;
+                ctx.strokeStyle = gangColors[pieceData.gang] || '#ff00ff';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(col * pieceW, row * pieceH, pieceW, pieceH);
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        img.onload = () => {
+            drawFullMuralWithGrid();
+            
+            const muralRef = database.ref('mural-gta6');
+            muralRef.on('child_added', (snapshot) => {
+                const pieceId = snapshot.key;
+                claimedPieces[pieceId] = snapshot.val();
+                const [colStr, rowStr] = pieceId.split('-');
+                
+                revealPiece(parseInt(colStr), parseInt(rowStr));
+                somNotificacao();
+            });
+
+            muralRef.on('child_changed', (snapshot) => {
+                const pieceId = snapshot.key;
+                claimedPieces[pieceId] = snapshot.val();
+                const [colStr, rowStr] = pieceId.split('-');
+                
+                revealPiece(parseInt(colStr), parseInt(rowStr));
+            });
+        };
+
+        canvas.addEventListener('click', function(e) {
+            if (!currentUser) {
+                alert('Você precisa estar logado para reivindicar um lote!');
+                mostrarLoginModal();
+                somErro();
+                return;
+            }
+
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+            const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+            const col = Math.floor(x / pieceW), row = Math.floor(y / pieceH);
+            const pieceId = `${col}-${row}`;
+
+            if (col < 0 || col >= cols || row < 0 || row >= rows) return;
+            if (claimedPieces[pieceId]) {
+                const owner = claimedPieces[pieceId];
+                alert(`Lote dominado por: ${owner.username} (${owner.gang})`);
+                somErro();
+                return;
+            }
+
+            if (!selectedGang) {
+                alert('Escolha uma facção primeiro!');
+                somErro();
+                return;
+            }
+
+            database.ref('mural-gta6/' + pieceId).set({
+                username: currentUser.displayName || currentUser.email.split('@')[0],
+                instagram: currentUser.email,
+                gang: selectedGang,
+                userId: currentUser.uid,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            userStats.experience += 10;
+            if (userStats.experience >= 100) {
+                userStats.level += 1;
+                userStats.experience = 0;
+                somSucesso();
+            } else {
+                somClique();
+            }
+            userStats.lotsOwned = (userStats.lotsOwned || 0) + 1;
+            database.ref('users/' + currentUser.uid).update(userStats);
+            atualizarPerfilUsuario();
+        });
+
+        canvas.addEventListener('mousemove', function(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+            const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+            const col = Math.floor(x / pieceW), row = Math.floor(y / pieceH);
+            const pieceId = `${col}-${row}`;
+
+            if (claimedPieces[pieceId]) {
+                const owner = claimedPieces[pieceId];
+                tooltip.style.display = 'block';
+                tooltip.style.left = (e.clientX + 20) + 'px';
+                tooltip.style.top = (e.clientY - 30) + 'px';
+                tooltip.innerText = `${owner.username} (${owner.gang})`;
+                canvas.style.cursor = 'not-allowed';
+            } else { 
+                tooltip.style.display = 'none'; 
+                canvas.style.cursor = 'crosshair'; 
+            }
+        });
+        canvas.addEventListener('mouseleave', () => tooltip.style.display = 'none');
+
+        // ==========================================
+        // CHAT GAMIFICADO
+        // ==========================================
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+        const chatRef = database.ref('chat-gta6');
+
+        function obterBadge(level) {
+            const badges = ['Iniciante', 'Membro', 'Veterano', 'Lenda', 'Imortal'];
+            return badges[Math.min(level - 1, 4)];
+        }
+
+        function obterCorAvatar(username) {
+            const cores = ['#ff3333', '#3366ff', '#ffcc00', '#00ff66', '#ff00ff', '#00ffff'];
+            let hash = 0;
+            for (let i = 0; i < username.length; i++) {
+                hash = username.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return cores[Math.abs(hash) % cores.length];
+        }
+
+        chatRef.on('child_added', (snapshot) => {
+            const data = snapshot.val();
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('chat-message');
+
+            const avatar = document.createElement('div');
+            avatar.classList.add('chat-avatar');
+            avatar.style.backgroundColor = obterCorAvatar(data.username);
+            avatar.textContent = data.username[0].toUpperCase();
+
+            const content = document.createElement('div');
+            content.classList.add('chat-content');
+
+            const header = document.createElement('div');
+            header.classList.add('chat-header');
+
+            const username = document.createElement('span');
+            username.classList.add('chat-username');
+            username.textContent = data.username;
+
+            const badge = document.createElement('span');
+            badge.classList.add('chat-badge', 'level' + Math.min(data.userLevel || 1, 5));
+            badge.textContent = obterBadge(data.userLevel || 1);
+
+            header.appendChild(username);
+            header.appendChild(badge);
+
+            const text = document.createElement('div');
+            text.classList.add('chat-text');
+            text.textContent = data.text;
+
+            content.appendChild(header);
+            content.appendChild(text);
+
+            msgDiv.appendChild(avatar);
+            msgDiv.appendChild(content);
+
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            if (data.userId !== currentUser?.uid) {
+                somNotificacao();
+            }
+        });
+
+        function enviarMensagem() {
+            if (!currentUser) {
+                alert('Você precisa estar logado para enviar mensagens!');
+                mostrarLoginModal();
+                somErro();
+                return;
+            }
+
+            const texto = chatInput.value.trim();
+            if (texto !== "") {
+                userStats.messages = (userStats.messages || 0) + 1;
+                
+                let level = 1 + Math.floor(userStats.messages / 10);
+                userStats.level = level;
+
+                chatRef.push({
+                    text: texto,
+                    username: currentUser.displayName || currentUser.email.split('@')[0],
+                    userId: currentUser.uid,
+                    userLevel: level,
+                    gang: selectedGang,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+
+                database.ref('users/' + currentUser.uid).update({
+                    messages: userStats.messages,
+                    level: level
+                });
+
+                chatInput.value = "";
+                atualizarPerfilUsuario();
+                somSucesso();
+            }
+        }
+
+        sendBtn.addEventListener('click', enviarMensagem);
+        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') enviarMensagem(); });
+
+        // Fechar modais ao clicar fora
+        document.getElementById('login-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('login-modal')) fecharLoginModal();
+        });
+
+        document.getElementById('registro-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('registro-modal')) fecharRegistroModal();
+        });
+
+        // Adicionar efeito de clique em todos os botões
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => somClique());
+        });
+    </script>
+</body>
+</html>
